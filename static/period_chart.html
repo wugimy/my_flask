@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Bootstrap Example</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
+</head>
+<body>
+  
+<nav class="navbar navbar-expand-sm navbar-dark bg-dark">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="javascript:void(0)">Logo</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mynavbar">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mynavbar">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="javascript:void(0)">Link</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="javascript:void(0)">Link</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="javascript:void(0)">Link</a>
+        </li>
+      </ul>
+      <form class="d-flex">
+        <input class="form-control me-2" type="text" placeholder="Search">
+        <button class="btn btn-primary" type="button">Search</button>
+      </form>
+    </div>
+  </div>
+</nav>
+  
+<div class="container-fluid">
+
+<script src="https://code.highcharts.com/stock/highstock.js"></script>
+<script src="https://code.highcharts.com/stock/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/stock/modules/export-data.js"></script>
+<script src="https://code.highcharts.com/stock/modules/accessibility.js"></script>
+
+<div id="container"></div>
+
+<script>
+Highcharts.theme = {
+	credits:{
+		enabled: false
+	},
+	//legend:{ enabled:true },
+    legend: {
+        align: 'left',
+        x: 70,
+        verticalAlign: 'top',
+        y: 70,
+        floating: true,
+        backgroundColor:
+            Highcharts.defaultOptions.legend.backgroundColor || 'white',
+        borderColor: '#CCC',
+        borderWidth: 1,
+        shadow: false
+    },
+    title: {
+        text: ''
+    },
+
+    xAxis: {
+        title: {
+            text: ''
+        },
+        labels: {
+            format: ''
+        }	
+    },
+    plotOptions: {
+        line: {
+			lineWidth: 4,
+            dataLabels: {
+                enabled: true,
+				style: {
+                fontSize: '16px',
+                fontFamily: 'Verdana, sans-serif'
+				}
+            },
+            enableMouseTracking: false
+        },
+		column: {
+            dataLabels: {
+                enabled: true,
+				style: {
+                fontSize: '16px',
+                fontFamily: 'Verdana, sans-serif'
+				}
+            }
+		}
+    }
+}
+// Apply the theme
+Highcharts.setOptions(Highcharts.theme);
+
+//JSON輸出表格
+function json_to_table(json_data) {
+    t = "<table><tr>";
+    for(var key in json_data[0]){
+        t += "<td>" + key + "</td>";
+    }
+    t += "</tr>";
+    for (var i = 0; i < json_data.length; i++) {
+        t += "<tr>";
+        for(var key in json_data[i]){
+            t += ("<td>" + json_data[i][key] + "</td>");
+        }
+        t += ("</tr>");
+    }
+    t += ("</table>");
+    return t
+}
+function show_card_header(title,result){
+	if(result > 0){
+		document.write('<div class="card-header bg-danger text-light"><h6>' + title + '</h6></div>');
+	}
+	else{
+		document.write('<div class="card-header bg-success text-light"><h6>' + title + '</h6></div>');
+	}
+}
+function show_card(title,result){
+	document.write('<div class="col-md-1"><div class="card shadow m-2">');
+	if(result > 0){
+		document.write('<div class="card-header bg-danger text-light"><h6>' + title + '</h6></div>');
+	}
+	else{
+		document.write('<div class="card-header bg-success text-light"><h6>' + title + '</h6></div>');
+	}
+	document.write('<div class="card-body">' + result + '</div>');
+	document.write('</div></div>');
+}
+function json_col(json_data,col){
+	arr = [];
+	for(var i=0;i<json_data.length;i++){
+		arr.push(json_data[i][col])
+	}
+	return arr;
+}
+function num_format(num,unit,f){
+	str = '';
+	op = unit.substr(0,1);
+	if(op=='+'){
+		if(num > 0){
+			str += '+';
+		}
+		else{
+			str += '-';
+		}
+		num = Math.abs(num);
+		unit = unit.substr(1,1);
+	}
+	if(unit=='K'){
+		num = num / 1000;
+	}
+	else if(unit=='萬'){
+		num = num / 10000;
+	}
+	else if(unit=='億'){
+		num = num / 100000000;
+	}
+	else if(unit=='M'){
+		num = num / 1000000;
+	}
+	else if(unit=='%'){
+		num = num * 100;
+	}
+	if(unit=='$'){
+		str += '$';
+		unit = '';
+	}
+	str += Math.round(num*(10**f))/(10**f);
+	str += unit;
+	return str;
+}
+var auo_color = '#005087,#64dcf0,#ffe664,#b491d7,#87dc64'.split(',');
+
+function to_utc(date_str){
+	date_str = date_str.replace('T',' ').split(' ')[0];
+	arr = date_str.split('-');
+	y = parseInt(arr[0]);
+	m = parseInt(arr[1])-1;
+	d = parseInt(arr[2]);
+	d = Date.UTC(y,m,d);
+	return d;
+}
+
+series = [];
+
+/*
+sql = "select * from cost_db.monthly_kpi";
+htmlobj=$.ajax({url:"/mysql_query",type:"POST",data:{sql:sql},async:false});
+json = JSON.parse(htmlobj.responseText);
+data = [];
+for(var i=0;i<json.length;i++){
+	a = to_utc(json[i]['PERIOD']);
+	b = json[i]['ARRAY_UC'];
+	data.push([a,b]);
+}
+series.push({name: 'AAPL0',data: data});
+*/
+
+data = [];
+start_date = new Date('2024/01/01');
+for(var i=0;i<5;i++){
+	a = to_utc(start_date.toISOString());
+	b = Math.round(Math.random()*10);
+	data.push([a,b]);
+	start_date.setDate(start_date.getDate()+1);
+}
+series.push({
+            name: 'AAPL1',
+            data: data,
+			yAxis: 0
+            //,tooltip: {
+            //    valueDecimals: 2
+            //}
+        });
+
+data = [];
+start_date = new Date('2023/01/01');
+for(var i=0;i<370;i++){
+	a = to_utc(start_date.toISOString());
+	b = Math.round(Math.random()*10);
+	data.push([a,b]);
+	start_date.setDate(start_date.getDate()+1);
+}
+series.push({name: 'AAPL2',type:'column',data: data,yAxis:1});
+
+(async () => {
+
+    // Create the chart
+    Highcharts.stockChart('container', {
+        rangeSelector: {
+            selected: 1
+        },
+        yAxis: [{
+            labels: {
+                align: 'right',
+                x: -3
+            },
+            title: {
+                text: 'OHLC'
+            },
+            height: '60%',
+            lineWidth: 2,
+            resize: {
+                enabled: true
+            }
+        }, {
+            labels: {
+                align: 'right',
+                x: -3
+            },
+            title: {
+                text: 'Volume'
+            },
+            top: '65%',
+            height: '35%',
+            offset: 0,
+            lineWidth: 2
+        }],
+        title: {
+            text: 'AAPL Stock Price'
+        },
+
+        series: series
+    });
+})();
+
+</script>
+
+</div>
+</body>
+</html>
