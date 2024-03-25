@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    <title>Hello Page</title>
+</head>
+<body>
+  <div class="container">
+  <a href="/meeting/">前一頁</a>
+  <h3><a href="/meeting_minutes/{{sn}}">{{title}}</a></h3>
+<form method="POST" action="/meeting_minutes/{{sn}}">
+
+  <div class="row">
+
+    <div class="col">
+      <div class="input-group mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text">會議記錄</span>
+        </div>
+        <input type="text" class="form-control" name="ITEM">
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="input-group mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text">Owner</span>
+        </div>
+        <input type="text" class="form-control" name="OWNER">
+      </div>
+    </div>
+    
+    <div class="col">
+	<div class="input-group mb-3">
+		<div class="input-group-prepend">
+		<span class="input-group-text">DUE DATE</span>
+		</div>
+		<input type="date" class="form-control" name="DUE_DATE">
+	</div>
+    </div>
+	  
+	<div class="col">
+    <button type="submit" class="btn btn-primary">Submit</button>
+	</div>
+    </div>
+
+</form>
+  <script>
+    //JSON輸出表格
+    function json_to_table(json_data) {
+        t = '<table class="table-bordered table-striped small"><tr class="bg-info text-light text-center">';
+        for(var key in json_data[0]){
+            t += '<th>' + key + '</th>';
+        }
+		t += '<th></th>';
+        t += "</tr>";
+        for (var i = 0; i < json_data.length; i++) {
+            t += "<tr>";
+            for(var key in json_data[i]){
+                t += ("<td>" + json_data[i][key] + "</td>");
+            }
+            t += '<td><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal" onclick="show_modal(' + json_data[i]['SN'] + ')">修改</button></td>';
+            t += ("</tr>");
+        }
+        t += ("</table>");
+        return t
+    }
+    function show_modal(sn){
+		a = jQuery.grep(json, function(e) {
+			return e['SN']==sn;
+		});
+		t = '';
+		t += '<input class="form-control" type="text" name="ITEM" value="' + a[0]['ITEM'] + '">';
+		t += '<input class="form-control" type="text" name="OWNER" value="' + a[0]['OWNER'] + '">';
+		t += '<input class="form-control" type="date" name="DUE_DATE" value="' + a[0]['DUE_DATE'] + '">';
+		t += '<input type="hidden" name="MSN" value="' + a[0]['SN'] + '">';
+        $("#show_modal").html(t);
+    }
+    var json = {{ myvar|safe }};
+    tb = json_to_table(json);
+    document.write(tb);
+  </script>
+  </div>
+
+
+
+  <!-- The Modal -->
+  <div class="modal" id="myModal">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form method="POST" action="/meeting_minutes/{{sn}}">
+        <!-- Modal Header -->
+        <div class="modal-header">
+          <h4 class="modal-title">Modal Heading</h4>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+
+        <!-- Modal body -->
+        <div class="modal-body">
+          <div id="show_modal"></div>
+        </div>
+
+        <!-- Modal footer -->
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Submit</button>
+          <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+        </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+</body>
+</html>
