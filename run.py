@@ -162,6 +162,72 @@ def web_scraper():
 @app.route("/hello")
 def hello():
     return "Hello World! This is Hello Page "
+
+@app.route('/meeting/', methods=['GET','POST'])
+def meeting():
+    cn = sqlite3.connect("my_db.db")
+    if 'MSN' in request.form:
+        SQL = "update meeting_minutes set "
+        SQL += "ITEM='" + request.form['ITEM'] + "'"
+        SQL += ",OWNER='" + request.form['OWNER'] + "'"
+        SQL += ",DUE_DATE='" + request.form['DUE_DATE'] + "' where SN=" + request.form['MSN']
+        cn.execute(SQL)
+        cn.commit()
+    elif 'ITEM' in request.form:
+        if request.form['ITEM']:
+            SQL = "insert into meeting_minutes (ITEM) values ('" + request.form['ITEM'] + "')"
+            cn.execute(SQL)
+            cn.commit()
+    SQL = "select * from meeting_minutes where BELONG is null"
+    df = pd.read_sql(SQL, cn)
+    jf = df.to_json(orient="records")
+    cn.close()
+    return render_template('meeting.html',myvar=jf)
+@app.route('/meeting_minutes/<sn>', methods=['GET','POST'])
+def meeting_minutes(sn):
+    #sn = request.args.get('sn')
+    cn = sqlite3.connect("my_db.db")
+    SQL = "select * from meeting_minutes where SN=" + sn
+    df = pd.read_sql(SQL, cn)
+    title = '會議名稱:' + df["ITEM"][0] + ' 主持人:' + df["OWNER"][0] + ' 日期:' + df["DUE_DATE"][0]
+    '''
+    if request.method == 'POST':
+        if request.form['name']:
+            SQL = "insert into meeting_minutes (ITEM,OWNER,DUE_DATE,BELONG) values ('" + request.form['name'] + "'"
+            SQL += ",'" + request.form['owner'] + "'"
+            SQL += ",'" + request.form['date'] + "'," + sn + ")"
+            cn.execute(SQL)
+            cn.commit()
+    '''
+    if 'MSN' in request.form:
+        SQL = "update meeting_minutes set ITEM='" + request.form['ITEM'] + "'"
+        SQL += ",OWNER='" + request.form['OWNER'] + "'"
+        SQL += ",DUE_DATE='" + request.form['DUE_DATE'] + "'"
+        SQL += " where SN=" + request.form['MSN']
+        cn.execute(SQL)
+        cn.commit()
+    elif 'ITEM' in request.form:
+        SQL = "insert into meeting_minutes (ITEM,OWNER,DUE_DATE,BELONG) values ('" + request.form['ITEM'] + "'"
+        SQL += ",'" + request.form['OWNER'] + "'"
+        SQL += ",'" + request.form['DUE_DATE'] + "'," + sn + ")"
+        cn.execute(SQL)
+        cn.commit()        
+    SQL = "select * from meeting_minutes where BELONG=" + sn
+    df = pd.read_sql(SQL, cn)
+    jf = df.to_json(orient="records")
+    cn.close()
+    return render_template('meeting_minutes.html',title=title,myvar=jf,sn=sn)
+@app.route('/init/')
+def init():
+    cn = sqlite3.connect("my_db.db")
+    #SQL = "create table collab (SN INTEGER PRIMARY KEY AUTOINCREMENT, LM_TIME datetime default current_timestamp)"
+    #SQL = "insert or replace into collab (SN) values (2)"
+    #SQL = "alter table meeting_minutes add column OWNER text after ITEM"
+    SQL = "create table IF NOT EXISTS meeting_minutes (SN INTEGER PRIMARY KEY AUTOINCREMENT,ITEM TEXT,OWNER text,DUE_DATE date,BELONG INTEGER, LM_TIME datetime default current_timestamp)"
+    cn.execute(SQL)
+    cn.commit()
+    cn.close()
+    return '<a href="/meeting/">完成資料表建立</a>'
     
 if __name__ == "__main__":
     app.run()
