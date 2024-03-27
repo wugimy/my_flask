@@ -229,6 +229,23 @@ def init():
     cn.close()
     return '<a href="/meeting/">完成資料表建立</a>'
     
+@app.route('/expense/')
+def expense():
+    cn = sqlite3.connect("my_db.db")
+    SQL = "select * from expense where MFG_DAY < '2023-01-03'"
+    SQL = "select MFG_DAY,sum(EXPENSE) as EXPENSE from expense group by MFG_DAY"
+    df = pd.read_sql(SQL, cn)
+    jf = df.to_json(orient="records")
+
+    SQL = "select DEPT"
+    for i in range(1,20):
+        SQL += ",sum(case when MFG_DAY='2023-01-" + "{0:02d}".format(i) + "' then EXPENSE else 0 end) as '2023/01/" + "{0:02d}".format(i) + "'"
+    SQL += " from expense where MFG_DAY <= '2023-01-02' group by DEPT"
+    df = pd.read_sql(SQL, cn)
+    jf2 = df.to_json(orient="records")
+    
+    cn.close()
+    return render_template('expense.html',jf=jf,jf2=jf2)
 if __name__ == "__main__":
     app.run()
     
