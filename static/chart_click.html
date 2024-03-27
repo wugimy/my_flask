@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Bootstrap CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+<title> Gimy Website </title>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<script src="https://code.highcharts.com/highcharts.js"></script>
+
+<script src="/static/js/highcharts_fun.js"></script>
+
+</head>
+<body>
+<div id="container"></div>
+<div id="container2">aaaa</div>
+
+<script>
+function click_show(param){
+	new_json = jQuery.grep(json, function(e) {
+		return e.DEPT==param;
+	});
+	txt = '<div class="row">';
+	for(var i=0;i < new_json.length;i++){
+		txt += '<div class="col">';
+		txt += '<div id="chart' + i + '">' + i + '</div>';
+		txt += '</div>';
+	}
+	txt += '</div>';
+	$("#container2").html(txt);
+	for(var i=0;i < new_json.length;i++){
+		data = [];
+		for(j in categories){
+			data.push(new_json[i][categories[j]]);
+		}
+		series = [{name:new_json[i]['ACC'],data:data}];
+		Highcharts.chart('chart'+i, {
+			series: series
+		});
+	}
+}
+
+var auo_color = "#005087,#64dcf0,#ffe664,#b491d7,#87dc64".split(",");
+var url = "/mysql_query";
+var sql = "";
+
+sql = "select DEPT,ACC";
+categories = [];
+for(var i=1; i <= 12;i++){
+	col_name = "M" + i;
+	sql += ",sum(case when PERIOD='2023/" + i + "/1' then EXPENSE else 0 end) as " + col_name;
+	categories.push(col_name);
+}
+sql += ",sum(EXPENSE) as EXPENSE"
+sql += " from expense group by DEPT,ACC"
+
+htmlobj=$.ajax({url:url,type:"POST",data:{sql:sql},async:false});
+json = JSON.parse(htmlobj.responseText);
+
+arr = distinct(json,'DEPT');
+for(i in arr){
+	document.write('<a class="btn btn-info" onclick="click_show(\'' + arr[i] + '\')">' + arr[i] + '</a>');
+}
+
+tb = json_to_table(json);
+document.write(tb);
+
+series = json_row(json,'ACC',categories);
+
+Highcharts.chart('container', {
+    chart: {
+        type: 'line'
+    },
+    title: {
+        text: 'Monthly Average Temperature'
+    },
+    subtitle: {
+        text: 'Source: ' +
+            '<a href="https://en.wikipedia.org/wiki/List_of_cities_by_average_temperature" ' +
+            'target="_blank">Wikipedia.com</a>'
+    },
+    xAxis: {
+        categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    },
+    yAxis: {
+        title: {
+            text: 'Temperature (°C)'
+        }
+    },
+    plotOptions: {
+        line: {
+            dataLabels: {
+                enabled: true
+            },
+            enableMouseTracking: false
+        }
+    },
+    series: series
+});
+</script>
+
+</body>
+</html>

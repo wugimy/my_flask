@@ -128,9 +128,10 @@ for(var i=0;i<5;i++){
 	categories.push(col_name);
 	sql += ",sum(case when MONTH(PERIOD)=" + (i+1) + " then EXPENSE else 0 end) as " + col_name;
 }
-sql += " from expense group by ACC";
+sql += " from expense group by ACC with rollup";
 htmlobj=$.ajax({url:url,type:"POST",data:{sql:sql},async:false});
 json = JSON.parse(htmlobj.responseText);
+json[json.length-1]['ACC'] = '加總';
 document.write(json_to_table(json));
 
 document.write('<div class="row">');

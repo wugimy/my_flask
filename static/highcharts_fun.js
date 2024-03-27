@@ -238,9 +238,6 @@ function show_chart(cid,categories,series,options){
 	}
 	
 	Highcharts.chart(cid, {
-		chart: {
-			type: 'line'
-		},
 		xAxis:{
 			categories: categories
 		},

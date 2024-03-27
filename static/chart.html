@@ -7,12 +7,26 @@
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
-<script src="https://code.highcharts.com/highcharts.js"></script>
-<script src="highcharts_fun.js"></script>
+
+
+
+<script src="/static/js/highcharts_fun.js"></script>
 </head>
 <body>
-  
+
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/export-data.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+
+<figure class="highcharts-figure">
+    <div id="container"></div>
+    <p class="highcharts-description">
+        This chart shows how data labels can be added to the data series. This
+        can increase readability and comprehension for small datasets.
+    </p>
+</figure>
+
 <nav class="navbar navbar-expand-sm navbar-dark bg-dark">
   <div class="container-fluid">
     <a class="navbar-brand" href="javascript:void(0)">Logo</a>
@@ -38,108 +52,80 @@
     </div>
   </div>
 </nav>
-  
+
+
+<div id="container2"></div>
 <div class="container-fluid">
 
 <script>
-var auo_color = '#005087,#64dcf0,#ffe664,#b491d7,#87dc64'.split(',');
-
-sql = "select * from cost_db.monthly_kpi";
-htmlobj=$.ajax({url:"/mysql_query",type:"POST",data:{sql:sql},async:false});
-json = JSON.parse(htmlobj.responseText);
-document.write(json_to_table(json));
-
+var auo_color = "#005087,#64dcf0,#ffe664,#b491d7,#87dc64".split(",");
+var url = "/mysql_query";
+var sql = "";
 
 document.write('<div class="row">');
 
+options = {'color':auo_color[4],'col_len':6};
+sql = "select DATE_FORMAT(PERIOD,'%Y%m') as PERIOD,sum(EXPENSE) as EXPENSE from expense group by PERIOD order by PERIOD";
 
-cid = 'test1';
-categories = json_col(json,'PERIOD');
-series = [];
-data = json_col(json,'ARRAY_EXPENSE');
-series.push({name:'test',type:'bar',data:data,dataLabels:{formatter: function(){return this.y/100}}});
-options = {'color':auo_color[4],'col_len':2};
-show_chart(cid,categories,series,options);
-
-cid = 'test2';
-categories = json_col(json,'PERIOD');
-categories = to_left(categories,7);
-series = [];
-data = json_col(json,'ARRAY_EXPENSE');
-series.push({name:'test1',data:to_acc(data),dataLabels:{formatter: function(){return this.y/100}}});
-series.push({name:'test2',type:'column',data:data});
-series.push({name:'test3',type:'column',data:data});
-
-options = {'color':auo_color[2],'col_len':2};
-show_chart(cid,categories,series,options);
-
-
-
-
-cid = 'test22';
-options = {'color':auo_color[3],'col_len':6};
-
-categories = json_col(json,'PERIOD');
-categories = to_left(categories,7);
-series = [];
-data = json_col(json,'ARRAY_EXPENSE');
-options['y_max'] = arr_max(data)*2;
-series.push({name:'test2',type:'column',data:data,dataLabels:{formatter: function(){return num_float(this.y/1000000,3)}}});
-
-options['y_min'] = -arr_max(data);
-series.push({name:'test1',yAxis:1,data:data,dataLabels:{formatter: function(){return this.y/100}}});
-
-
-
-show_chart(cid,categories,series,options);
-
-
-
-
-
-
-
-
-x = 'ARRAY_EXPENSE';
-y = 'ARRAY_INPUT';
-xy = json_xy(json,x,y);
-cid = 'my_scatter';
-categories = null;
-series = [{name:cid,type:'scatter',data:xy}];
-options = {'color':auo_color[3],'col_len':2};
-show_chart(cid,categories,series,options);
-
-
-
-sql0 = "select 'ARRAY' as STAGE,PERIOD,ARRAY_EXPENSE from cost_db.monthly_kpi union all select 'CF' as STAGE,PERIOD,CF_EXPENSE from cost_db.monthly_kpi"
-sql0 += " union all select 'ARRAY1' as STAGE,PERIOD,ARRAY_EXPENSE*1.1 from cost_db.monthly_kpi"
-sql0 += " union all select 'CF11' as STAGE,PERIOD,CF_EXPENSE*1.1 from cost_db.monthly_kpi"
-
-gb = "STAGE";
-sql = "select " + gb;
-var d = new Date('2023/1/1');
+sql = "select DEPT,ACC";
 categories = [];
-for(var i=0;i<10;i++){
-	y = d.getFullYear().toString();
-	m = (d.getMonth()+1).toString().padStart(2,'0');;
-	col_name = 'M' + y.substr(3,1) + m;
-	sql += ",sum(case when PERIOD='" + y + "/" + m + "/01' then ARRAY_EXPENSE else 0 end) as " + col_name;
+for(var i=1; i <= 12;i++){
+	col_name = "M" + i;
+	sql += ",sum(case when PERIOD='2023/" + i + "/1' then EXPENSE else 0 end) as " + col_name;
 	categories.push(col_name);
-	d.setMonth(d.getMonth()+1);
 }
-//sql += " from cost_db.monthly_kpi";
-sql += " from (" + sql0 + ") A group by STAGE";
-htmlobj=$.ajax({url:"/mysql_query",type:"POST",data:{sql:sql},async:false});
+sql += " from expense group by DEPT,ACC"
+htmlobj=$.ajax({url:url,type:"POST",data:{sql:sql},async:false});
 json = JSON.parse(htmlobj.responseText);
-series = json_row(json,gb,categories);
 
-options = {'color':auo_color[1],'col_len':2};
-show_chart('test4',categories,series,options);
+tb = json_to_table(json)
+show_card('aaa',tb,options)
 
-
+series = json_row(json,'ACC',categories);
+//draw_chart('container2',categories,series);
 
 
 document.write('</div>');
+cid = "container2";
+
+Highcharts.chart('container', {
+    chart: {
+        type: 'line'
+    },
+    title: {
+        text: 'Monthly Average Temperature'
+    },
+    subtitle: {
+        text: 'Source: ' +
+            '<a href="https://en.wikipedia.org/wiki/List_of_cities_by_average_temperature" ' +
+            'target="_blank">Wikipedia.com</a>'
+    },
+    xAxis: {
+        categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    },
+    yAxis: {
+        title: {
+            text: 'Temperature (°C)'
+        }
+    },
+    plotOptions: {
+        line: {
+            dataLabels: {
+                enabled: true
+            },
+            enableMouseTracking: false
+        }
+    },
+    series: [{
+        name: 'Reggane',
+        data: [16.0, 18.2, 23.1, 27.9, 32.2, 36.4, 39.8, 38.4, 35.5, 29.2,
+            22.0, 17.8]
+    }, {
+        name: 'Tallinn',
+        data: [-2.9, -3.6, -0.6, 4.8, 10.2, 14.5, 17.6, 16.5, 12.0, 6.5,
+            2.0, -0.9]
+    }]
+});
 </script>
 
 

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Bootstrap Example</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/export-data.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+<script src="/static/js/highcharts_fun.js"></script>
+</head>
+<body>
+
+<script>
+var auo_color = "#005087,#64dcf0,#ffe664,#b491d7,#87dc64".split(",");
+var url = "/mysql_query";
+var sql = "";
+
+sql = "select concat(DEPT,'-',ACC) as 項目,sum(EXPENSE) as EXPENSE from expense group by DEPT,ACC order by sum(EXPENSE) desc limit 8";
+htmlobj=$.ajax({url:url,type:"POST",data:{sql:sql},async:false});
+json = JSON.parse(htmlobj.responseText);
+
+categories = json_col(json,'項目');
+series = [{name:'費用',type:'bar',data:json_col(json,'EXPENSE')}];
+show_chart('aaaa',categories,series,{});
+document.write(json_to_table(json));
+
+sql = "select PERIOD,sum(case when DEPT='P1' then EXPENSE else 0 end) as P1,sum(case when DEPT='P2' then EXPENSE else 0 end) as P2 from expense group by PERIOD order by PERIOD";
+htmlobj=$.ajax({url:url,type:"POST",data:{sql:sql},async:false});
+json = JSON.parse(htmlobj.responseText);
+document.write(json_to_table(json));
+
+cid = 'test1';
+//categories = ['USA', 'China', 'Brazil', 'EU', 'India', 'Russia'];
+//series = [{name:'test',data:[406292, 260000, 107000, 68300, 27500, 14500]}];
+
+categories = json_col(json,'PERIOD');
+series = [{name:'P1',data:json_col(json,'P1')}];
+
+show_chart(cid,categories,series);
+
+document.write('<div class="row">');
+
+document.write('<div class="col-md-2">');
+	cid = 'test2'
+	data = json_col(json,'P1');
+	show_sparkline(cid,data);
+document.write('</div>');
+
+document.write('<div class="col-md-2">');
+cid = 'test3'
+data = json_col(json,'P2');
+show_sparkline(cid,data);
+document.write('</div>');
+
+document.write('</div>');
+</script>
+
+</body>
+</html>

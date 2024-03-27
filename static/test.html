@@ -7,8 +7,6 @@
 </head>
 <body>
 
-<a href="/add_book">add</a> | <a href="/del_book">delete</a>
-
 <script type="text/javascript">
 
 //JSON輸出表格
@@ -46,6 +44,22 @@ function num_dollar(num,unit='',f=0){
 	res += unit;
 	return res;
 }
+
+today = new Date();
+first_date = new Date(today.getFullYear(),0,1);
+first_date.setDate(first_date.getDate()-first_date.getDay()+6);
+ws = new Date(today.getFullYear(),today.getMonth(),today.getDate());
+n = 6;
+ws.setDate(ws.getDate()-ws.getDay()+6-7*n);
+sql = "select DEPT";
+for(var i=0;i<=n;i++){
+	date_str = ws.toLocaleString().split(' ')[0];
+	col_name = 'W' + first_date.getFullYear().toString().substr(3,1) + ((ws-first_date)/86400000/7+1).toString().padStart(2,'0');
+	sql += ",sum(case when COTID_DATE <= '" + date_str + "' then PROFIT else 0 end) as " + col_name;
+	ws.setDate(ws.getDate()+7);
+}
+sql += " from cost_db.cot_project where COTID like '2024_L5A%' group by DEPT";
+document.write('<h3>' + sql + '</h3>');
 
 num = 123123.123;
 document.write('<h3>' + multiply(num,3) + '</h3>');
