@@ -112,6 +112,7 @@ function show_card(title,result,options={}){
 }
 
 function show_sparkline(cid,data){
+	/*
 	document.write('<div class="card">');
 		document.write('<div class="card-header p-1"><h2>' + cid + '</h2></div>');
 		document.write('<div class="p-2 d-flex">');
@@ -119,18 +120,27 @@ function show_sparkline(cid,data){
 		document.write('<div id="' + cid + '"></div>');
 		document.write('</div>');
 	document.write('</div>');
+	
+	document.write('<div class="row">');
+		document.write('<div class="col-auto mx-2"><h6>現況人力</h6><h2>' + data[data.length-1] + '</h2></div>');
+		document.write('<div class="col" id="' + cid + '"></div>');
+	document.write('</div>');
+	*/
+	document.write('<div id="' + cid + '"></div>');
+	
 	Highcharts.chart(cid, {
 		chart: {
             backgroundColor: null,
             borderWidth: 0,
             type: 'area',
             margin: [2, 0, 2, 0],
-            height: 50
+			height: 80
 		},
 		title: {
 			text: ''
 		},
         xAxis: {
+			lineWidth :0,//去掉x轴线
             labels: {
                 enabled: false
             },
@@ -163,7 +173,7 @@ function show_sparkline(cid,data){
         plotOptions: {
             series: {
                 animation: false,
-                lineWidth: 1,
+                lineWidth: 4,
                 shadow: false,
                 states: {
                     hover: {
@@ -185,6 +195,77 @@ function show_sparkline(cid,data){
                 borderColor: 'silver'
             }
         },
-		series: [{data:data}]
+		series: [{type:'column',data:data}]
+	});
+}
+function to_sparkline(cid,data){
+	Highcharts.chart(cid, {
+		chart: {
+            backgroundColor: null,
+            borderWidth: 0,
+            type: 'area',
+            margin: [2, 0, 2, 0],
+			height: 80
+		},
+		title: {
+			text: ''
+		},
+        xAxis: {
+			lineWidth :0,//去掉x轴线
+            labels: {
+                enabled: false
+            },
+            title: {
+                text: null
+            },
+            startOnTick: false,
+            endOnTick: false,
+            tickPositions: []
+        },
+        yAxis: {
+            endOnTick: false,
+            startOnTick: false,
+            labels: {
+                enabled: false
+            },
+            title: {
+                text: null
+            },
+            tickPositions: [0]
+        },
+        legend: {
+            enabled: false
+        },
+        tooltip: {
+            hideDelay: 0,
+            outside: true,
+            shared: true
+        },
+        plotOptions: {
+            series: {
+                animation: false,
+                lineWidth: 3,
+                shadow: false,
+                states: {
+                    hover: {
+                        lineWidth: 1
+                    }
+                },
+                marker: {
+                    radius: 1,
+                    states: {
+                        hover: {
+                            radius: 2
+                        }
+                    }
+                },
+                fillOpacity: 0.25
+            },
+            column: {
+                negativeColor: '#910000',
+                borderColor: 'silver'
+            }
+        },
+		series: [{type:'area',data:data}]
 	});
 }
