@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Bootstrap Example</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/export-data.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+<script src="/static/js/highcharts_fun.js"></script>
+</head>
+<body>
+<div class="container-fluid">
+
+<script>
+document.write('<div class="row">');
+var auo_color = "#005087,#64dcf0,#ffe664,#b491d7,#87dc64".split(",");
+var url = "/mysql_query";
+var sql = "";
+
+sql = "select LEFT(DEPT,1) as DEPT_CODE,DEPT,ACC,sum(EXPENSE) as EXPENSE from expense group by DEPT,ACC"
+htmlobj=$.ajax({url:url,type:"POST",data:{sql:sql},async:false});
+jsons = JSON.parse(htmlobj.responseText);
+//document.write(json_to_table(jsons));
+platforms = distinct(jsons,'DEPT_CODE');
+
+sql = "select distinct ACC from expense";
+htmlobj=$.ajax({url:url,type:"POST",data:{sql:sql},async:false});
+json = JSON.parse(htmlobj.responseText);
+categories = json_col(json,'ACC');
+//document.write(categories);
+
+for(platform of platforms.values()){
+json = jQuery.grep(jsons, function(e) {
+    return e.DEPT_CODE==platform;
+});
+arr = distinct(json,'DEPT');
+series = [];
+for(i in arr){
+	data = [];
+	for(j in categories){
+		a = jQuery.grep(jsons, function(e) {
+			return e.DEPT==arr[i] && e.ACC==categories[j];
+		});
+		val = 0;
+		if(a.length > 0){
+			val = a[0]['EXPENSE'];
+		}
+		data.push(val);
+	}
+	series.push({name:arr[i],data:data});
+}
+cid = 'zzz'+platform;
+document.write('<div class="col-md-4">');
+document.write('<div id="' + cid + '"></div>');
+document.write('</div>');
+render_chart(cid,categories,series);
+}
+
+
+/*
+sql = "select DEPT";
+for(i in categories){
+	sql += ",sum(case when ACC='" + categories[i] + "' then EXPENSE else 0 end) as " + categories[i];
+}
+sql += " from expense group by DEPT";
+htmlobj=$.ajax({url:url,type:"POST",data:{sql:sql},async:false});
+json = JSON.parse(htmlobj.responseText);
+document.write(json_to_table(json));
+
+series = json_row(json,'DEPT',categories);
+
+for(var i=0;i<5;i++){
+	cid = 'bb'+i;
+	document.write('<div class="col-md-4">');
+	document.write('<div id="' + cid + '"></div>');
+	document.write('</div>');
+	render_chart(cid,categories,series);
+}
+
+
+
+sql = "select concat(DEPT,'-',ACC) as 項目,sum(EXPENSE) as EXPENSE from expense group by DEPT,ACC order by sum(EXPENSE) desc limit 8";
+htmlobj=$.ajax({url:url,type:"POST",data:{sql:sql},async:false});
+json = JSON.parse(htmlobj.responseText);
+
+for(var i=0;i<5;i++){
+	categories = json_col(json,'項目');
+	series = [{name:'費用',data:json_col(json,'EXPENSE')}];
+	cid = 'aaaa'+i;
+	document.write('<div class="col-md-4">');
+	document.write('<div id="' + cid + '"></div>');
+	document.write('</div>');
+	render_chart(cid,categories,series);
+}
+*/
+
+document.write('</div>');
+</script>
+
+</div>
+</body>
+</html>

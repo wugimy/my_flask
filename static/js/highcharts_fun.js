@@ -61,6 +61,46 @@ function distinct(json,field){
     return group;
 }
 
+function render_chart(cid,categories,series,options={}){
+	Highcharts.chart(cid, {
+		chart: {
+			type: 'column'
+		},
+		title: {
+			text: cid,
+			align: 'left'
+		},
+		xAxis: {
+			categories: categories,
+			crosshair: true,
+			accessibility: {
+				description: 'Countries'
+			}
+		},
+		yAxis: {
+			min: 0,
+			title: {
+				text: '1000 metric tons (MT)'
+			},
+			stackLabels: {
+				enabled: true
+			}
+		},
+		tooltip: {
+			valueSuffix: ' (1000 MT)'
+		},
+		plotOptions: {
+			column: {
+				stacking: 'normal',
+				dataLabels: {
+					enabled: true
+				}
+			}
+		},
+		series: series
+	});
+}
+
 function show_chart(cid,categories,series,options={}){
 	document.write('<div class="col-md-12">');
 	document.write('<div id="' + cid + '"></div>');
