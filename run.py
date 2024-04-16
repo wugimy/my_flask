@@ -7,6 +7,7 @@ import openpyxl
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.select import Select
 from bs4 import BeautifulSoup
 import pymysql
 
@@ -44,6 +45,8 @@ def home():
     SQL = "select * from expense"
     SQL = "select * from books"
     df = pd.read_sql(SQL, cn)
+    SQL = "select strftime('%Y%W',pass_datetime),sum(grade) from books group by strftime('%Y%W',pass_datetime)"
+    df2 = pd.read_sql(SQL, cn)
     cn.close()
     jf = df.to_json(orient="records")
     html = '<a href="/static/index.html">index</a>'
@@ -52,7 +55,9 @@ def home():
     html += ' | <a href="/web_scraper">爬蟲</a>'
     html += '<h3>' + jf
     html += '</h3>'
-    return html
+    #return html
+    jf2 = df2.to_json(orient="records")
+    return render_template('index.html',jf=jf,jf2=jf2)
 
 @app.route("/mysql_query", methods=["POST", "GET"])
 def mysql_query():
@@ -141,6 +146,8 @@ def web_scraper():
     a.click()
     url = "https://read.tc.edu.tw/stu_account_number_1.php"
     driver.get(url) # 更改網址以前往不同網頁
+    a = driver.find_element(By.NAME, "perpage")
+    Select(a).select_by_index(2)
     soup = BeautifulSoup(driver.page_source, 'html.parser')
     driver.close() # 關閉瀏覽器視窗
     
@@ -150,10 +157,12 @@ def web_scraper():
         td = i.find_all('td')
         if len(td) > 5:
             print(td[1].text,td[2].text,td[3].text,td[4].text,td[5].text)
+            result = td[5].text
+            grade = td[6].text
             SQL = "INSERT OR IGNORE INTO books (id) VALUES ('" + td[1].text + "')"
             cn.execute(SQL)
-            pass_datetime = td[5].text.split('~')[0]
-            SQL = "update books set book_name='" + td[2].text + "',result='" + td[3].text + "',grade='" + td[4].text + "',pass_datetime='" + pass_datetime + "' where id='" + td[1].text + "'"
+            pass_datetime = td[7].text.split('~')[0]
+            SQL = "update books set book_name='" + td[2].text + "',result='" + result + "',grade='" + grade + "',pass_datetime='" + pass_datetime + "' where id='" + td[1].text + "'"
             cn.execute(SQL)
     cn.commit()
     cn.close()
@@ -162,6 +171,30 @@ def web_scraper():
 @app.route("/hello")
 def hello():
     return "Hello World! This is Hello Page "
+
+@app.route('/memo/', methods=['GET','POST'])
+def memo():
+    cn = sqlite3.connect("my_db.db")
+    if 'MSN' in request.form:
+        memo = request.form['MEMO'].replace("'","''")
+        SQL = "update memo set "
+        SQL += "MEMO='" + memo + "'"
+        SQL += " where SN=" + request.form['MSN']
+        if 'ACT' in request.form:
+            SQL = "delete from memo where SN=" + request.form['MSN']
+        cn.execute(SQL)
+        cn.commit()
+    elif 'MEMO' in request.form:
+        if request.form['MEMO']:
+            memo = request.form['MEMO'].replace("'","''")
+            SQL = "insert into memo (MEMO) values ('" + memo + "')"
+            cn.execute(SQL)
+            cn.commit()
+    SQL = "select * from memo order by MEMO"
+    df = pd.read_sql(SQL, cn)
+    jf = df.to_json(orient="records")
+    cn.close()
+    return render_template('memo.html',myvar=jf)
 
 @app.route('/meeting/', methods=['GET','POST'])
 def meeting():
@@ -183,6 +216,7 @@ def meeting():
     jf = df.to_json(orient="records")
     cn.close()
     return render_template('meeting.html',myvar=jf)
+
 @app.route('/meeting_minutes/<sn>', methods=['GET','POST'])
 def meeting_minutes(sn):
     #sn = request.args.get('sn')
@@ -223,7 +257,9 @@ def init():
     #SQL = "create table collab (SN INTEGER PRIMARY KEY AUTOINCREMENT, LM_TIME datetime default current_timestamp)"
     #SQL = "insert or replace into collab (SN) values (2)"
     #SQL = "alter table meeting_minutes add column OWNER text after ITEM"
-    SQL = "create table IF NOT EXISTS meeting_minutes (SN INTEGER PRIMARY KEY AUTOINCREMENT,ITEM TEXT,OWNER text,DUE_DATE date,BELONG INTEGER, LM_TIME datetime default current_timestamp)"
+    #SQL = "create table IF NOT EXISTS meeting_minutes (SN INTEGER PRIMARY KEY AUTOINCREMENT,ITEM TEXT,OWNER text,DUE_DATE date,BELONG INTEGER, LM_TIME datetime default current_timestamp)"
+    SQL = "create table IF NOT EXISTS memo (SN INTEGER PRIMARY KEY AUTOINCREMENT,MEMO TEXT,LM_TIME datetime default current_timestamp)"
+    SQL = "create table books (id text PRIMARY KEY,book_name text,result text,grade INTERGER,pass_datetime datetime,LM_TIME datetime default current_timestamp)"
     cn.execute(SQL)
     cn.commit()
     cn.close()
@@ -246,8 +282,17 @@ def expense():
     
     cn.close()
     return render_template('expense.html',jf=jf,jf2=jf2)
+    
+@app.route('/login_test/', methods=['GET','POST'])
+def login_test():
+    #name =flask.Request.remote_user.name
+    remote_user = str(request.remote_user)
+    ip = request.remote_addr + remote_user
+    return ip
+    
+    
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True, host='0.0.0.0', port=5000)
     
     
 '''

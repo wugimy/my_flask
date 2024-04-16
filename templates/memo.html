@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    <title>Hello Page</title>
+</head>
+<body>
+<div class="container">
+<form method="POST" action="#">
+
+<textarea class="form-control" name="MEMO"></textarea>
+<button class="btn btn-success" type="submit">Go</button>
+
+
+</form>
+
+<script>
+    //JSON輸出表格
+    function json_to_table(json_data) {
+        t = '<table class="table-bordered table-striped small"><tr class="bg-info text-light">';
+        for(var key in json_data[0]){
+            t += '<th>' + key + '</th>';
+        }
+		t += '<th></th>';
+		t += '<th></th>';
+        t += "</tr>";
+        for (var i = 0; i < json_data.length; i++) {
+            t += "<tr>";
+            for(var key in json_data[i]){
+                t += ("<td>" + json_data[i][key] + "</td>");
+            }
+			t += '<td><button class="btn btn-info" data-toggle="modal" data-target="#myModal" onclick="show_modal(' + json_data[i]['SN'] + ')">修改</button></td>';
+            t += ("</tr>");
+        }
+        t += ("</table>");
+        return t
+    }
+    function show_modal(sn){
+		a = jQuery.grep(json, function(e) {
+			return e['SN']==sn;
+		});
+		t = '';
+		t += '<textarea class="form-control" name="MEMO">' + a[0]['MEMO'] + '</textarea>';
+		t += '<input type="hidden" name="MSN" value="' + a[0]['SN'] + '">';
+        $("#show_modal").html(t);
+    }
+    var json = {{ myvar|safe }};
+	/*
+	if(json.length　> 0){
+		tb = json_to_table(json);
+	}
+	else{
+		tb = '無資料'
+	}
+    document.write(tb);
+	*/
+	for(var i=0;i<json.length;i++){
+		document.write('<div class="card shadow">');
+		arr = json[i]['MEMO'].split('\n');
+		document.write('<button class="btn btn-info" data-toggle="modal" data-target="#myModal" onclick="show_modal(' + json[i]['SN'] + ')">' + arr[0] + '</button>');
+		document.write(json[i]['MEMO'].replaceAll('\n','<br>'));
+		document.write('</div>');
+	}
+</script>
+</div>
+  
+  
+  
+<!-- The Modal -->
+<div class="modal" id="myModal">
+<div class="modal-dialog">
+  <div class="modal-content">
+	<form method="POST" action="#">
+	<!-- Modal Header -->
+	<div class="modal-header">
+	  <h4 class="modal-title">Modal Heading</h4>
+	  <button type="button" class="close" data-dismiss="modal">&times;</button>
+	</div>
+
+	<!-- Modal body -->
+	<div class="modal-body">
+	  <div id="show_modal"></div>
+	</div>
+
+	<!-- Modal footer -->
+	<div class="modal-footer">
+		<label class="form-check-label">
+		<input type="checkbox" class="form-check-input" name="ACT" value="D">刪除
+		</label>
+		<button type="submit" class="btn btn-primary">Submit</button>
+		<button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+	</div>
+	</form>
+  </div>
+</div>
+</div>
+  
+</body>
+</html>

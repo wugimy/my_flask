@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+	<script src="https://code.highcharts.com/highcharts.js"></script>
+	<script src="/static/js/highcharts_fun.js"></script>
+    <title>Hello Page</title>
+</head>
+<body>
+<div class="container">
+
+<a href="/web_scraper">爬蟲</a>
+
+<script>
+//var json = {{jf2|safe}};
+//tb = json_to_table(json);
+//document.write(tb);
+
+var json = {{jf|safe}};
+
+categories = [];
+data = [];
+
+today = new Date();
+ws = new Date(today.getFullYear(),today.getMonth(),today.getDate(),8,0,0);
+n = 16;
+ws.setDate(ws.getDate()-ws.getDay()-7*n+1);
+for(var i=0;i<=n;i++){
+	p0 = ws.toISOString().split('T')[0];
+	ws.setDate(ws.getDate()+7);
+	p1 = ws.toISOString().split('T')[0];
+	//document.write(p0 + '~' + p1 +'<br>');
+	new_json = jQuery.grep(json, function(e) {
+		return e.pass_datetime >= p0 && e.pass_datetime < p1;
+	});
+	s = arr_sum(json_col(new_json,'grade'));
+	//document.write(p0 + '~' + p1 + ':' + s + '<br>');
+	categories.push(p0);
+	if (s < 6) {
+		data.push({color:'red',y:s});
+	}
+	else {
+		data.push({y:s});
+	}
+}
+series = [{name:'得分',type:'column',data:data}];
+//show_chart('chart0',categories,series);
+document.write('<div id="container"></div>');
+
+Highcharts.chart('container', {
+    title: {
+        text: '閱讀認證'
+    },
+    xAxis: {
+        categories: categories
+    },
+	yAxis:　{
+		plotLines: [{
+            dashStyle: 'dash',
+            color: 'red',
+            width: 2,
+            value: 5
+        }]
+	},
+	series: series
+});
+
+tb = json_to_table(json);
+document.write(tb);
+</script>
+</div>
+</body>
+</html>
