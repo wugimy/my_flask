@@ -21,6 +21,10 @@ db_settings = {
     "charset": "utf8"
 }
 
+global_value = 0
+def to_do():
+    global_value += 1
+
 def df_transform(df):
     data = []
     for row in df.values:
@@ -37,13 +41,17 @@ def get_df_from_mysql(SQL):
     df = pd.read_sql(SQL, cn)
     cn.close()
     return df
+def get_df_from_sqlite(SQL):
+    cn = sqlite3.connect('my_db.db')
+    df = pd.read_sql(SQL, cn)
+    cn.close()
+    return df
 
 app = Flask(__name__)
 @app.route("/")
 def home():
     cn = sqlite3.connect('my_db.db')
-    SQL = "select * from expense"
-    SQL = "select * from books"
+    SQL = "select *,(case when grade=0 then 'pink' else 'white' end) as COLOR from books order by pass_datetime desc"
     df = pd.read_sql(SQL, cn)
     SQL = "select strftime('%Y%W',pass_datetime),sum(grade) from books group by strftime('%Y%W',pass_datetime)"
     df2 = pd.read_sql(SQL, cn)
@@ -114,6 +122,10 @@ def del_book():
     cn.commit()
     cn.close()
     return '<a href="/static/index.html">back</a>'
+
+@app.route('/run_def/<s>')
+def run_def(s):
+    return '<a href="/">back</a>'
 
 @app.route('/excel/<sheet_name>')
 def excel(sheet_name):
@@ -260,6 +272,8 @@ def init():
     #SQL = "create table IF NOT EXISTS meeting_minutes (SN INTEGER PRIMARY KEY AUTOINCREMENT,ITEM TEXT,OWNER text,DUE_DATE date,BELONG INTEGER, LM_TIME datetime default current_timestamp)"
     SQL = "create table IF NOT EXISTS memo (SN INTEGER PRIMARY KEY AUTOINCREMENT,MEMO TEXT,LM_TIME datetime default current_timestamp)"
     SQL = "create table books (id text PRIMARY KEY,book_name text,result text,grade INTERGER,pass_datetime datetime,LM_TIME datetime default current_timestamp)"
+    #cn.execute("drop table menu")
+    SQL = "create table IF NOT EXISTS menu (SN INTEGER PRIMARY KEY AUTOINCREMENT,LINK_NAME TEXT,LINK_ADDR text,BELONG INTEGER,LM_TIME datetime default current_timestamp)"
     cn.execute(SQL)
     cn.commit()
     cn.close()
@@ -282,14 +296,48 @@ def expense():
     
     cn.close()
     return render_template('expense.html',jf=jf,jf2=jf2)
-    
+
+
+@app.route('/menu/', methods=['GET','POST'])
+def menu():
+    cn = sqlite3.connect("my_db.db")
+    if 'MSN' in request.form:
+        SQL = "update menu set "
+        SQL += "LINK_NAME='" + request.form['LINK_NAME'] + "'"
+        SQL += ",LINK_ADDR='" + request.form['LINK_ADDR'] + "'"
+        SQL += ",BELONG=0 where SN=" + request.form['MSN']
+        cn.execute(SQL)
+        cn.commit()
+    elif 'BELONG' in request.form:
+        if request.form['BELONG']:
+            SQL = "insert into menu (LINK_NAME,LINK_ADDR,BELONG) values ('" + request.form['LINK_NAME'] + "','" + request.form['LINK_ADDR'] + "'," + request.form['BELONG'] + ")"
+            cn.execute(SQL)
+            cn.commit()
+    elif 'LINK_NAME' in request.form:
+        if request.form['LINK_NAME']:
+            SQL = "insert into menu (LINK_NAME,LINK_ADDR) values ('" + request.form['LINK_NAME'] + "','" + request.form['LINK_ADDR'] + "')"
+            cn.execute(SQL)
+            cn.commit()
+    SQL = "select * from menu"
+    df = pd.read_sql(SQL, cn)
+    jf = df.to_json(orient="records")
+    cn.close()
+    return render_template('menu.html',json=jf)
+
 @app.route('/login_test/', methods=['GET','POST'])
 def login_test():
     #name =flask.Request.remote_user.name
     remote_user = str(request.remote_user)
     ip = request.remote_addr + remote_user
     return ip
-    
+
+@app.route("/kanban/")
+def kanban():
+    SQL = "select strftime('%Y-%m-%d',pass_datetime) as 日期,sum(grade) as grade,count(*) as 次數,sum(case when grade > 0 then 1 else 0 end) as 成功,sum(case when grade > 0 then 1 else 0 end)*100/sum(1) as 成功率 from books where pass_datetime >= '2024-03-01' group by strftime('%Y-%m-%d',pass_datetime)"
+    df = get_df_from_sqlite(SQL)
+    jf = df.to_json(orient="records")
+    return render_template('kanban.html',jf=jf)
+
     
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=5000)
