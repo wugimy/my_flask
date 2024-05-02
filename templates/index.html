@@ -12,19 +12,35 @@
     <title>Hello Page</title>
 </head>
 <body>
+
+<nav class="navbar navbar-expand-sm bg-light p-0">
+
+  <!-- Links -->
+  <ul class="navbar-nav">
+    <li class="nav-item">
+      <a class="nav-link" href="#">Link 1</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="#">Link 2</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="#">Link 3</a>
+    </li>
+  </ul>
+
+</nav>
+
+
 <div class="container">
 
-<a href="/web_scraper">爬蟲</a>
+<a class="btn btn-info" href="/web_scraper">爬蟲</a>
 
 <script>
-//var json = {{jf2|safe}};
-//tb = json_to_table(json);
-//document.write(tb);
-
 var json = {{jf|safe}};
 
 categories = [];
 data = [];
+ratio = [];
 
 today = new Date();
 ws = new Date(today.getFullYear(),today.getMonth(),today.getDate(),8,0,0);
@@ -47,30 +63,45 @@ for(var i=0;i<=n;i++){
 	else {
 		data.push({y:s});
 	}
+	ng = 0;
+	for(var j=0;j<new_json.length;j++){
+		if(new_json[j]['grade']==0){
+			ng += 1;
+		}
+	}
+	ok = new_json.length - ng;
+	ratio.push(ok/(ok+ng));
 }
+//document.write(ratio);
 series = [{name:'得分',type:'column',data:data}];
+series.push({yAxis:1,data:ratio});
 //show_chart('chart0',categories,series);
 document.write('<div id="container"></div>');
 
 Highcharts.chart('container', {
     title: {
-        text: '閱讀認證'
+        text: '吳鈞堯的閱讀認證'
     },
     xAxis: {
         categories: categories
     },
-	yAxis:　{
-		plotLines: [{
-            dashStyle: 'dash',
-            color: 'red',
-            width: 2,
-            value: 5
-        }]
-	},
+	yAxis:　[{
+			plotLines: [{
+				dashStyle: 'dash',
+				color: 'red',
+				width: 2,
+				value: 5
+			}]
+		},
+		{
+			min:-1,
+			max:1,
+			opposite: true
+		}],
 	series: series
 });
 
-tb = json_to_table(json);
+tb = json_to_color_table(json);
 document.write(tb);
 </script>
 </div>

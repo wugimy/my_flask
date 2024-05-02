@@ -1,7 +1,22 @@
+Highcharts.theme = {
+    colors: ['#005087','#64dcf0','#ffe664','#b491d7','#87dc64','#2b908f', '#90ee7e', '#f45b5b', '#7798BF', '#aaeeee', '#ff0066',
+        '#eeaaee', '#55BF3B', '#DF5353', '#7798BF', '#aaeeee'],
+	credits:{
+		enabled: false
+	},
+	exporting:{
+		enabled: false
+	}
+}
+// Apply the theme
+Highcharts.setOptions(Highcharts.theme);
+
+
 //JSON輸出表格
 function json_to_table(json_data) {
-	t = '<table class="table table-dark table-striped table-hover table-responsive table-sm">';
-	t += '<tr style="background:black">';
+    t = '<table class="table-bordered table-striped small"><tr class="bg-info text-light">';
+	t = '<table class="table table-hover table-responsive table-sm small">';
+	t += '<tr class="bg-info text-light">';
     for(var key in json_data[0]){
         t += "<td>" + key + "</td>";
     }
@@ -129,24 +144,22 @@ function render_chart(cid,categories,series,options={}){
 }
 
 function show_chart(cid,categories,series,options={}){
-	var col_len = 12;
-	if('col_len' in options){
-		col_len = options['col_len'];
-	}
-	document.write('<div class="col-md-' + col_len + '">');
-	document.write('<div class="card bg-dark">');
-	document.write('<div class="card-body">');
+	document.write('<div class="col-md-12">');
 	document.write('<div id="' + cid + '"></div>');
-	document.write('</div>');
-	document.write('</div>');
 	document.write('</div>');
 	Highcharts.chart(cid, {
 		chart: {
-			backgroundColor: null,
 			type: 'column'
 		},
 		title: {
-			text: ''
+			text: 'Corn vs wheat estimated production for 2020',
+			align: 'left'
+		},
+		subtitle: {
+			text:
+				'Source: <a target="_blank" ' +
+				'href="https://www.indexmundi.com/agriculture/?commodity=corn">indexmundi</a>',
+			align: 'left'
 		},
 		xAxis: {
 			categories: categories,
@@ -161,28 +174,8 @@ function show_chart(cid,categories,series,options={}){
 				text: '1000 metric tons (MT)'
 			}
 		},
-		series: series
-	});
-}
-
-function show_pie(cid,series,options={}){
-	var col_len = 12;
-	if('col_len' in options){
-		col_len = options['col_len'];
-	}
-	document.write('<div class="col-md-' + col_len + '">');
-	document.write('<div class="card bg-dark">');
-	document.write('<div class="card-body">');
-	document.write('<div id="' + cid + '"></div>');
-	document.write('</div>');
-	document.write('</div>');
-	document.write('</div>');
-	Highcharts.chart(cid, {
-		chart: {
-			backgroundColor: null
-		},
-		title: {
-			text: ''
+		tooltip: {
+			valueSuffix: ' (1000 MT)'
 		},
 		series: series
 	});
@@ -193,12 +186,11 @@ function show_card(title,result,options={}){
 	if('col_len' in options){
 		col_len = options['col_len'];
 	}
-	document.write('<div class="col-md-' + col_len + '">');
-	document.write('<div class="card bg-dark text-light shadow m-2">');
+	document.write('<div class="col-md-' + col_len + '"><div class="card shadow m-2">');
 	if(title != ''){
-		document.write('<div class="card-header text-light m-0 p-2"><h6>' + title + '</h6></div>');
+		document.write('<div style="background:#0b559f;" class="card-header text-light m-0 p-2"><h6>' + title + '</h6></div>');
 	}
-	document.write('<div class="card-body">' + result + '</div>');
+	document.write('<div style="background:#dae8f5;" class="card-body">' + result + '</div>');
 	document.write('</div></div>');
 }
 

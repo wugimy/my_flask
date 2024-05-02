@@ -1,0 +1,14 @@
+body{
+	background: black;
+	color: #424242;
+}
+.container-fluid {
+	background: black;
+	//background-image: linear-gradient(#bad6ea,black);
+}
+table, td{
+	color: white;
+}
+.card {
+	border-radius: 20px;
+}
