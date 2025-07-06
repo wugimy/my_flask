@@ -48,8 +48,12 @@ def get_df_from_sqlite(SQL):
     return df
 
 app = Flask(__name__)
+
 @app.route("/")
 def home():
+    return "HELLO222"
+@app.route("/home2")
+def home2():
     cn = sqlite3.connect('my_db.db')
     SQL = "select *,(case when grade=0 then 'pink' else 'white' end) as COLOR from books order by pass_datetime desc"
     df = pd.read_sql(SQL, cn)
