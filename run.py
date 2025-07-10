@@ -51,7 +51,7 @@ app = Flask(__name__)
 
 @app.route("/")
 def home():
-    return "HELLO222"
+    return "HELLO333"
 @app.route("/home2")
 def home2():
     cn = sqlite3.connect('my_db.db')
